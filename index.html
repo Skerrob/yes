@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zrób mi dzień - logowanie Google + profil</title>
+  <title>Zrób mi dzień - logowanie Google + licznik zadań</title>
   <style>
     body {
       font-family: 'Fredoka', sans-serif;
@@ -38,17 +38,25 @@
     button:hover {
       background-color: #357ae8;
     }
-    .profile-info {
-      margin-bottom: 1.5em;
-      font-weight: bold;
-      font-size: 1.2em;
-      color: #555;
-    }
     #logoutBtn {
       background-color: #d93025;
+      margin-top: 1.5em;
     }
     #logoutBtn:hover {
       background-color: #a52714;
+    }
+    #taskCounter {
+      margin-top: 2em;
+      font-size: 1.4em;
+      font-weight: 700;
+      color: #333;
+    }
+    #addTaskBtn {
+      background-color: #34a853;
+      margin-top: 1em;
+    }
+    #addTaskBtn:hover {
+      background-color: #2c8e46;
     }
   </style>
 </head>
@@ -63,9 +71,12 @@
     </div>
 
     <div id="profileSection" style="display:none;">
-      <p class="profile-info">Witaj, <span id="userName"></span>!</p>
-      <!-- Tutaj później będzie licznik, zadania itp -->
+      <!-- Brak powitania, tylko przycisk wyloguj -->
       <button id="logoutBtn">Wyloguj się</button>
+
+      <!-- Licznik zadań -->
+      <div id="taskCounter">Wykonane zadania: 0</div>
+      <button id="addTaskBtn">Dodaj zadanie</button>
     </div>
 
   </div>
@@ -93,13 +104,14 @@
     const logoutBtn = document.getElementById('logoutBtn');
     const loginSection = document.getElementById('loginSection');
     const profileSection = document.getElementById('profileSection');
-    const userNameSpan = document.getElementById('userName');
+    const taskCounter = document.getElementById('taskCounter');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+
+    // Licznik zadań przechowywany lokalnie w pamięci przeglądarki
+    let taskCount = 0;
 
     loginBtn.addEventListener('click', () => {
       signInWithPopup(auth, provider)
-        .then((result) => {
-          // Zalogowano, stan zostanie obsłużony przez onAuthStateChanged
-        })
         .catch((error) => {
           alert("Błąd logowania: " + error.message);
         });
@@ -109,17 +121,25 @@
       signOut(auth);
     });
 
+    addTaskBtn.addEventListener('click', () => {
+      taskCount++;
+      updateTaskCounter();
+    });
+
+    function updateTaskCounter() {
+      taskCounter.textContent = `Wykonane zadania: ${taskCount}`;
+    }
+
     onAuthStateChanged(auth, user => {
       if (user) {
-        // Użytkownik zalogowany
-        userNameSpan.textContent = user.displayName;
         loginSection.style.display = 'none';
         profileSection.style.display = 'block';
+        taskCount = 0; // resetujemy licznik po zalogowaniu, możesz zmienić na pobieranie z bazy
+        updateTaskCounter();
       } else {
-        // Użytkownik wylogowany
         loginSection.style.display = 'block';
         profileSection.style.display = 'none';
-        userNameSpan.textContent = '';
+        taskCount = 0;
       }
     });
   </script>
