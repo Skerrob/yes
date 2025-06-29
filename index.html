@@ -2,25 +2,19 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zrób mi dzień</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zrób mi dzień - profil</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500&display=swap');
-
     body {
       font-family: 'Fredoka', sans-serif;
       background: linear-gradient(to top left, #ffecd2, #fcb69f);
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      margin: 0;
-      padding: 2rem 1rem;
-      flex-direction: column;
       align-items: center;
-      gap: 1rem;
+      height: 100vh;
+      margin: 0;
     }
-
     .app-container {
       background-color: #fff;
       border-radius: 2rem;
@@ -31,13 +25,15 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
       position: relative;
     }
-
-    .challenge {
-      font-size: 1.4em;
-      margin: 1.5em 0;
-      min-height: 3em;
+    input[type="text"] {
+      padding: 0.8em 1em;
+      font-size: 1.1em;
+      border-radius: 1em;
+      border: 2px solid #fc6076;
+      width: 80%;
+      margin-bottom: 1em;
+      text-align: center;
     }
-
     button {
       padding: 0.9em 2em;
       border: none;
@@ -48,287 +44,63 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-
     button:hover {
       background-color: #ff3366;
     }
-
-    .points {
-      margin-top: 1.5em;
+    .profile-info {
+      margin-bottom: 1.5em;
       font-weight: bold;
+      font-size: 1.2em;
       color: #555;
     }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 2em;
-      border-radius: 1em;
-      text-align: center;
-      max-width: 300px;
-      width: 90%;
-    }
-
-    .close-btn {
-      background: #fc6076;
-      border: none;
-      color: white;
-      padding: 0.5em 1em;
-      border-radius: 1em;
-      margin-top: 1em;
-      cursor: pointer;
-    }
-
-    .profile {
-      background: white;
-      border-radius: 1em;
-      padding: 1em 2em;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      max-width: 420px;
-      width: 90%;
-      text-align: center;
-    }
-
-    .top-list {
-      background: white;
-      border-radius: 1em;
-      padding: 1em 2em;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      max-width: 420px;
-      width: 90%;
-      text-align: left;
-    }
-
-    .top-list h3 {
-      text-align: center;
-      margin-bottom: 1em;
-    }
-
-    .top-list ol {
-      padding-left: 1.2em;
-      margin: 0;
-    }
-
-    .top-list li {
-      margin-bottom: 0.5em;
-      font-weight: 500;
-      color: #444;
-    }
-
-    .logout-btn {
-      background: #ff5c5c;
-      margin-top: 1em;
-    }
-
   </style>
 </head>
 <body>
 
-  <div class="profile" id="profile" style="display:none;">
-    <p><strong>Użytkownik:</strong> <span id="usernameDisplay"></span></p>
-    <p><strong>Punkty:</strong> <span id="userPoints">0</span></p>
-    <button class="logout-btn" onclick="logout()">Wyloguj</button>
-  </div>
-
-  <div class="app-container" id="appContainer" style="display:none;">
+  <div class="app-container" id="app">
     <h1>Zrób mi dzień 🎉</h1>
-    <p class="challenge" id="challenge">Ładowanie wyzwania...</p>
-    <button id="doneBtn" onclick="markAsDone()">Zrobione ✅</button>
-    <p class="points" id="points">Punkty: 0</p>
-  </div>
 
-  <div class="modal" id="modal">
-    <div class="modal-content">
-      <h2>🎉 Gratulacje!</h2>
-      <p>Nowe wyzwanie będzie dostępne za:</p>
-      <p id="countdown" style="font-size:1.5em; font-weight:bold;"></p>
-      <button class="close-btn" onclick="closeModal()">Zamknij</button>
+    <div id="profileSetup">
+      <p>Podaj swoją nazwę użytkownika:</p>
+      <input type="text" id="usernameInput" placeholder="Twoja nazwa..." />
+      <br />
+      <button onclick="saveUsername()">Zapisz profil</button>
     </div>
-  </div>
 
-  <div class="top-list" id="topList" style="display:none;">
-    <h3>TOP Użytkownicy</h3>
-    <ol id="topUsersList"></ol>
+    <div id="profileInfo" style="display:none;">
+      <p class="profile-info">Witaj, <span id="usernameDisplay"></span>!</p>
+      <!-- Tutaj później będą zadania itd. -->
+    </div>
+
   </div>
 
   <script>
-    const challenges = [
-      "Uśmiechnij się do obcej osoby 😄",
-      "Powiedz komuś coś miłego 💬",
-      "Wyjdź na 10 minut bez telefonu 📵",
-      "Narysuj coś głupiego ✏️",
-      "Zjedz coś, czego zwykle nie jesz 🍍",
-      "Przybij piątkę 3 osobom ✋",
-      "Wyślij śmiesznego mema komuś 🐸",
-      "Zamień się miejscem w domu z kimś na 5 minut 🛋️",
-      "Napisz wiadomość do siebie z przyszłości 📧",
-      "Zrób 7 pajacyków 🤸"
-    ];
-
-    const appContainer = document.getElementById("appContainer");
-    const challengeText = document.getElementById("challenge");
-    const doneBtn = document.getElementById("doneBtn");
-    const pointsDisplay = document.getElementById("points");
-    const modal = document.getElementById("modal");
-    const countdown = document.getElementById("countdown");
-    const profile = document.getElementById("profile");
-    const usernameDisplay = document.getElementById("usernameDisplay");
-    const userPointsDisplay = document.getElementById("userPoints");
-    const topList = document.getElementById("topList");
-    const topUsersList = document.getElementById("topUsersList");
-
-    // PROSTE LOGOWANIE - dla demo (w praktyce podpiąć Google Firebase itp)
-    function login() {
-      let username = prompt("Podaj swój nick (do profilu i rankingu):", "Użytkownik" + Math.floor(Math.random() * 1000));
-      if (!username) return alert("Musisz podać nazwę użytkownika!");
-      localStorage.setItem("zmd_username", username);
-      localStorage.setItem("zmd_points", localStorage.getItem("zmd_points") || 0);
-      localStorage.setItem("zmd_next_time", localStorage.getItem("zmd_next_time") || 0);
-      initApp();
-    }
-
-    function logout() {
-      localStorage.removeItem("zmd_username");
-      localStorage.removeItem("zmd_points");
-      localStorage.removeItem("zmd_next_time");
-      location.reload();
-    }
-
-    // Wczytanie danych z localStorage lub domyślne
-    let username = localStorage.getItem("zmd_username");
-    let points = parseInt(localStorage.getItem("zmd_points")) || 0;
-    let nextChallengeTime = parseInt(localStorage.getItem("zmd_next_time")) || 0;
-
-    function showChallenge() {
-      const challenge = challenges[Math.floor(Math.random() * challenges.length)];
-      challengeText.innerText = challenge;
-    }
-
-    function updateCountdown() {
-      let now = new Date().getTime();
-      let distance = nextChallengeTime - now;
-      if (distance <= 0) {
-        localStorage.removeItem("zmd_next_time");
-        modal.style.display = "none";
-        doneBtn.disabled = false;
-        showChallenge();
-        clearInterval(countdownInterval);
-      } else {
-        let hours = Math.floor(distance / (1000 * 60 * 60));
-        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        countdown.innerText = `${hours}h ${minutes}m ${seconds}s`;
-      }
-    }
-
-    let countdownInterval;
-
-    function markAsDone() {
-      points++;
-      localStorage.setItem("zmd_points", points);
-      userPointsDisplay.innerText = points;
-      updateTopUsers(username, points);
-      let delay = 24 * 60 * 60 * 1000; // 24h
-      nextChallengeTime = new Date().getTime() + delay;
-      localStorage.setItem("zmd_next_time", nextChallengeTime);
-      modal.style.display = "flex";
-      doneBtn.disabled = true;
-      updateCountdown();
-      countdownInterval = setInterval(updateCountdown, 1000);
-      challengeText.innerText = "⌛ Poczekaj 24h na kolejne wyzwanie...";
-      pointsDisplay.innerText = `Punkty: ${points}`;
-    }
-
-    function closeModal() {
-      modal.style.display = "none";
-    }
-
-    // Ranking top użytkowników w localStorage
-    // Przechowujemy jako JSON: {username: string, points: number}[]
-    function getTopUsers() {
-      const topJSON = localStorage.getItem("zmd_top_users");
-      return topJSON ? JSON.parse(topJSON) : [];
-    }
-
-    function saveTopUsers(topUsers) {
-      localStorage.setItem("zmd_top_users", JSON.stringify(topUsers));
-    }
-
-    function updateTopUsers(user, pts) {
-      if (!user) return;
-      let topUsers = getTopUsers();
-      const existing = topUsers.find(u => u.username === user);
-      if (existing) {
-        if (pts > existing.points) existing.points = pts;
-      } else {
-        topUsers.push({ username: user, points: pts });
-      }
-      // Sort malejąco
-      topUsers.sort((a,b) => b.points - a.points);
-      // Trzymaj max 10
-      if (topUsers.length > 10) topUsers = topUsers.slice(0,10);
-      saveTopUsers(topUsers);
-      renderTopUsers();
-    }
-
-    function renderTopUsers() {
-      let topUsers = getTopUsers();
-      topUsersList.innerHTML = "";
-      if(topUsers.length === 0) {
-        topUsersList.innerHTML = "<li>Brak danych</li>";
+    function saveUsername() {
+      const input = document.getElementById('usernameInput');
+      const name = input.value.trim();
+      if (name.length < 2) {
+        alert("Nazwa musi mieć co najmniej 2 znaki.");
         return;
       }
-      topUsers.forEach(u => {
-        let li = document.createElement("li");
-        li.textContent = `${u.username} — ${u.points} pkt`;
-        topUsersList.appendChild(li);
-      });
+      localStorage.setItem('zmd_username', name);
+      showProfile();
     }
 
-    function initApp() {
-      username = localStorage.getItem("zmd_username");
-      points = parseInt(localStorage.getItem("zmd_points")) || 0;
-      nextChallengeTime = parseInt(localStorage.getItem("zmd_next_time")) || 0;
-
-      if (!username) {
-        login();
-        return;
-      }
-
-      usernameDisplay.innerText = username;
-      userPointsDisplay.innerText = points;
-      appContainer.style.display = "block";
-      profile.style.display = "block";
-      topList.style.display = "block";
-
-      // Jeśli jeszcze można zrobić wyzwanie
-      if (!nextChallengeTime || new Date().getTime() > nextChallengeTime) {
-        doneBtn.disabled = false;
-        showChallenge();
-        pointsDisplay.innerText = `Punkty: ${points}`;
+    function showProfile() {
+      const name = localStorage.getItem('zmd_username');
+      if (!name) {
+        document.getElementById('profileSetup').style.display = 'block';
+        document.getElementById('profileInfo').style.display = 'none';
       } else {
-        doneBtn.disabled = true;
-        challengeText.innerText = "⌛ Poczekaj 24h na kolejne wyzwanie...";
-        modal.style.display = "flex";
-        updateCountdown();
-        countdownInterval = setInterval(updateCountdown, 1000);
+        document.getElementById('usernameDisplay').innerText = name;
+        document.getElementById('profileSetup').style.display = 'none';
+        document.getElementById('profileInfo').style.display = 'block';
       }
-
-      renderTopUsers();
     }
 
-    initApp();
-
+    // Pokaz profil przy starcie
+    showProfile();
   </script>
+
 </body>
 </html>
