@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zrób mi dzień - profil</title>
+  <title>Zrób mi dzień - logowanie Google + profil</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500&display=swap');
     body {
       font-family: 'Fredoka', sans-serif;
       background: linear-gradient(to top left, #ffecd2, #fcb69f);
@@ -25,33 +24,31 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
       position: relative;
     }
-    input[type="text"] {
-      padding: 0.8em 1em;
-      font-size: 1.1em;
-      border-radius: 1em;
-      border: 2px solid #fc6076;
-      width: 80%;
-      margin-bottom: 1em;
-      text-align: center;
-    }
     button {
       padding: 0.9em 2em;
       border: none;
-      background-color: #fc6076;
+      background-color: #4285F4;
       color: white;
       border-radius: 2em;
       font-size: 1.1em;
       cursor: pointer;
       transition: background 0.3s;
+      margin-top: 1em;
     }
     button:hover {
-      background-color: #ff3366;
+      background-color: #357ae8;
     }
     .profile-info {
       margin-bottom: 1.5em;
       font-weight: bold;
       font-size: 1.2em;
       color: #555;
+    }
+    #logoutBtn {
+      background-color: #d93025;
+    }
+    #logoutBtn:hover {
+      background-color: #a52714;
     }
   </style>
 </head>
@@ -60,46 +57,71 @@
   <div class="app-container" id="app">
     <h1>Zrób mi dzień 🎉</h1>
 
-    <div id="profileSetup">
-      <p>Podaj swoją nazwę użytkownika:</p>
-      <input type="text" id="usernameInput" placeholder="Twoja nazwa..." />
-      <br />
-      <button onclick="saveUsername()">Zapisz profil</button>
+    <div id="loginSection">
+      <p>Zaloguj się, aby korzystać z aplikacji</p>
+      <button id="loginBtn">Zaloguj przez Google</button>
     </div>
 
-    <div id="profileInfo" style="display:none;">
-      <p class="profile-info">Witaj, <span id="usernameDisplay"></span>!</p>
-      <!-- Tutaj później będą zadania itd. -->
+    <div id="profileSection" style="display:none;">
+      <p class="profile-info">Witaj, <span id="userName"></span>!</p>
+      <!-- Tutaj później będzie licznik, zadania itp -->
+      <button id="logoutBtn">Wyloguj się</button>
     </div>
 
   </div>
 
-  <script>
-    function saveUsername() {
-      const input = document.getElementById('usernameInput');
-      const name = input.value.trim();
-      if (name.length < 2) {
-        alert("Nazwa musi mieć co najmniej 2 znaki.");
-        return;
-      }
-      localStorage.setItem('zmd_username', name);
-      showProfile();
-    }
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
-    function showProfile() {
-      const name = localStorage.getItem('zmd_username');
-      if (!name) {
-        document.getElementById('profileSetup').style.display = 'block';
-        document.getElementById('profileInfo').style.display = 'none';
+    const firebaseConfig = {
+      apiKey: "AIzaSyDY63HPKIKtTXBFcvZqEVBQgtW0627-Pqg",
+      authDomain: "zrob-mi-dzien.firebaseapp.com",
+      projectId: "zrob-mi-dzien",
+      storageBucket: "zrob-mi-dzien.firebasestorage.app",
+      messagingSenderId: "161518888152",
+      appId: "1:161518888152:web:c519898be81990cd3fa3ad",
+      measurementId: "G-CYB3WNG5LK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginSection = document.getElementById('loginSection');
+    const profileSection = document.getElementById('profileSection');
+    const userNameSpan = document.getElementById('userName');
+
+    loginBtn.addEventListener('click', () => {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          // Zalogowano, stan zostanie obsłużony przez onAuthStateChanged
+        })
+        .catch((error) => {
+          alert("Błąd logowania: " + error.message);
+        });
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      signOut(auth);
+    });
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        // Użytkownik zalogowany
+        userNameSpan.textContent = user.displayName;
+        loginSection.style.display = 'none';
+        profileSection.style.display = 'block';
       } else {
-        document.getElementById('usernameDisplay').innerText = name;
-        document.getElementById('profileSetup').style.display = 'none';
-        document.getElementById('profileInfo').style.display = 'block';
+        // Użytkownik wylogowany
+        loginSection.style.display = 'block';
+        profileSection.style.display = 'none';
+        userNameSpan.textContent = '';
       }
-    }
-
-    // Pokaz profil przy starcie
-    showProfile();
+    });
   </script>
 
 </body>
