@@ -1,23 +1,28 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zrób mi dzień z Google Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zrób mi dzień</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500&display=swap');
+
     body {
       font-family: 'Fredoka', sans-serif;
       background: linear-gradient(to top left, #ffecd2, #fcb69f);
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      align-items: flex-start;
+      min-height: 100vh;
       margin: 0;
+      padding: 2rem 1rem;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
     }
+
     .app-container {
-      background: #fff;
+      background-color: #fff;
       border-radius: 2rem;
       padding: 2em;
       max-width: 420px;
@@ -26,11 +31,13 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
       position: relative;
     }
+
     .challenge {
       font-size: 1.4em;
       margin: 1.5em 0;
-      min-height: 60px;
+      min-height: 3em;
     }
+
     button {
       padding: 0.9em 2em;
       border: none;
@@ -40,15 +47,18 @@
       font-size: 1.1em;
       cursor: pointer;
       transition: background 0.3s;
-      margin: 0.5em 0;
     }
-    button:hover:not(:disabled) {
+
+    button:hover {
       background-color: #ff3366;
     }
-    button:disabled {
-      background-color: #bbb;
-      cursor: not-allowed;
+
+    .points {
+      margin-top: 1.5em;
+      font-weight: bold;
+      color: #555;
     }
+
     .modal {
       display: none;
       position: fixed;
@@ -57,7 +67,9 @@
       background: rgba(0, 0, 0, 0.5);
       justify-content: center;
       align-items: center;
+      z-index: 10;
     }
+
     .modal-content {
       background: white;
       padding: 2em;
@@ -66,9 +78,7 @@
       max-width: 300px;
       width: 90%;
     }
-    .modal h2 {
-      margin-bottom: 1em;
-    }
+
     .close-btn {
       background: #fc6076;
       border: none;
@@ -78,75 +88,80 @@
       margin-top: 1em;
       cursor: pointer;
     }
-    #user-info {
+
+    .profile {
+      background: white;
+      border-radius: 1em;
+      padding: 1em 2em;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .top-list {
+      background: white;
+      border-radius: 1em;
+      padding: 1em 2em;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      max-width: 420px;
+      width: 90%;
+      text-align: left;
+    }
+
+    .top-list h3 {
+      text-align: center;
       margin-bottom: 1em;
-      font-size: 0.9em;
-      color: #333;
     }
-    #logoutBtn {
-      background-color: #999;
+
+    .top-list ol {
+      padding-left: 1.2em;
+      margin: 0;
     }
-    #logoutBtn:hover {
-      background-color: #666;
+
+    .top-list li {
+      margin-bottom: 0.5em;
+      font-weight: 500;
+      color: #444;
     }
+
+    .logout-btn {
+      background: #ff5c5c;
+      margin-top: 1em;
+    }
+
   </style>
 </head>
 <body>
 
-  <div class="app-container" id="app">
-    <div id="login-section">
-      <h1>Zaloguj się</h1>
-      <button id="loginBtn">Zaloguj przez Google</button>
-    </div>
+  <div class="profile" id="profile" style="display:none;">
+    <p><strong>Użytkownik:</strong> <span id="usernameDisplay"></span></p>
+    <p><strong>Punkty:</strong> <span id="userPoints">0</span></p>
+    <button class="logout-btn" onclick="logout()">Wyloguj</button>
+  </div>
 
-    <div id="main-section" style="display:none;">
-      <div id="user-info"></div>
-      <p class="challenge" id="challenge">Ładowanie wyzwania...</p>
-      <button id="doneBtn">Zrobione ✅</button>
-      <button id="logoutBtn">Wyloguj</button>
-    </div>
+  <div class="app-container" id="appContainer" style="display:none;">
+    <h1>Zrób mi dzień 🎉</h1>
+    <p class="challenge" id="challenge">Ładowanie wyzwania...</p>
+    <button id="doneBtn" onclick="markAsDone()">Zrobione ✅</button>
+    <p class="points" id="points">Punkty: 0</p>
   </div>
 
   <div class="modal" id="modal">
     <div class="modal-content">
       <h2>🎉 Gratulacje!</h2>
       <p>Nowe wyzwanie będzie dostępne za:</p>
-      <p id="countdown"></p>
-      <button class="close-btn" id="closeModalBtn">Zamknij</button>
+      <p id="countdown" style="font-size:1.5em; font-weight:bold;"></p>
+      <button class="close-btn" onclick="closeModal()">Zamknij</button>
     </div>
   </div>
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+  <div class="top-list" id="topList" style="display:none;">
+    <h3>TOP Użytkownicy</h3>
+    <ol id="topUsersList"></ol>
+  </div>
 
-    // Firebase config - podmień na swoje z konsoli Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyDY63HPKIKtTXBFcvZqEVBQgtW0627-Pqg",
-      authDomain: "zrob-mi-dzien.firebaseapp.com",
-      projectId: "zrob-mi-dzien",
-      storageBucket: "zrob-mi-dzien.firebasestorage.app",
-      messagingSenderId: "161518888152",
-      appId: "1:161518888152:web:c519898be81990cd3fa3ad",
-      measurementId: "G-CYB3WNG5LK"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const loginSection = document.getElementById("login-section");
-    const mainSection = document.getElementById("main-section");
-    const userInfo = document.getElementById("user-info");
-    const challengeText = document.getElementById("challenge");
-    const doneBtn = document.getElementById("doneBtn");
-    const modal = document.getElementById("modal");
-    const countdown = document.getElementById("countdown");
-    const closeModalBtn = document.getElementById("closeModalBtn");
-
+  <script>
     const challenges = [
       "Uśmiechnij się do obcej osoby 😄",
       "Powiedz komuś coś miłego 💬",
@@ -160,104 +175,160 @@
       "Zrób 7 pajacyków 🤸"
     ];
 
-    let points = 0;
-    let nextChallengeTime = null;
-    let countdownInterval;
+    const appContainer = document.getElementById("appContainer");
+    const challengeText = document.getElementById("challenge");
+    const doneBtn = document.getElementById("doneBtn");
+    const pointsDisplay = document.getElementById("points");
+    const modal = document.getElementById("modal");
+    const countdown = document.getElementById("countdown");
+    const profile = document.getElementById("profile");
+    const usernameDisplay = document.getElementById("usernameDisplay");
+    const userPointsDisplay = document.getElementById("userPoints");
+    const topList = document.getElementById("topList");
+    const topUsersList = document.getElementById("topUsersList");
 
-    // Zapisywanie stanu w localStorage wg UID użytkownika
-    function saveState(uid) {
-      localStorage.setItem(`zmd_points_${uid}`, points);
-      localStorage.setItem(`zmd_next_time_${uid}`, nextChallengeTime);
+    // PROSTE LOGOWANIE - dla demo (w praktyce podpiąć Google Firebase itp)
+    function login() {
+      let username = prompt("Podaj swój nick (do profilu i rankingu):", "Użytkownik" + Math.floor(Math.random() * 1000));
+      if (!username) return alert("Musisz podać nazwę użytkownika!");
+      localStorage.setItem("zmd_username", username);
+      localStorage.setItem("zmd_points", localStorage.getItem("zmd_points") || 0);
+      localStorage.setItem("zmd_next_time", localStorage.getItem("zmd_next_time") || 0);
+      initApp();
     }
 
-    function loadState(uid) {
-      points = parseInt(localStorage.getItem(`zmd_points_${uid}`)) || 0;
-      nextChallengeTime = localStorage.getItem(`zmd_next_time_${uid}`) || null;
-      if(nextChallengeTime) nextChallengeTime = parseInt(nextChallengeTime);
+    function logout() {
+      localStorage.removeItem("zmd_username");
+      localStorage.removeItem("zmd_points");
+      localStorage.removeItem("zmd_next_time");
+      location.reload();
     }
 
-    function showRandomChallenge() {
+    // Wczytanie danych z localStorage lub domyślne
+    let username = localStorage.getItem("zmd_username");
+    let points = parseInt(localStorage.getItem("zmd_points")) || 0;
+    let nextChallengeTime = parseInt(localStorage.getItem("zmd_next_time")) || 0;
+
+    function showChallenge() {
       const challenge = challenges[Math.floor(Math.random() * challenges.length)];
       challengeText.innerText = challenge;
     }
 
     function updateCountdown() {
-      if(!nextChallengeTime) return;
       let now = new Date().getTime();
       let distance = nextChallengeTime - now;
-      if(distance <= 0) {
-        nextChallengeTime = null;
-        doneBtn.disabled = false;
+      if (distance <= 0) {
+        localStorage.removeItem("zmd_next_time");
         modal.style.display = "none";
-        showRandomChallenge();
-        saveState(auth.currentUser.uid);
+        doneBtn.disabled = false;
+        showChallenge();
         clearInterval(countdownInterval);
-        return;
+      } else {
+        let hours = Math.floor(distance / (1000 * 60 * 60));
+        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        countdown.innerText = `${hours}h ${minutes}m ${seconds}s`;
       }
-      let hours = Math.floor(distance / (1000 * 60 * 60));
-      let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      countdown.innerText = `${hours}h ${minutes}m ${seconds}s`;
     }
+
+    let countdownInterval;
 
     function markAsDone() {
       points++;
-      doneBtn.disabled = true;
-      nextChallengeTime = new Date().getTime() + 24*60*60*1000; // 24h
-      saveState(auth.currentUser.uid);
+      localStorage.setItem("zmd_points", points);
+      userPointsDisplay.innerText = points;
+      updateTopUsers(username, points);
+      let delay = 24 * 60 * 60 * 1000; // 24h
+      nextChallengeTime = new Date().getTime() + delay;
+      localStorage.setItem("zmd_next_time", nextChallengeTime);
       modal.style.display = "flex";
+      doneBtn.disabled = true;
       updateCountdown();
       countdownInterval = setInterval(updateCountdown, 1000);
+      challengeText.innerText = "⌛ Poczekaj 24h na kolejne wyzwanie...";
+      pointsDisplay.innerText = `Punkty: ${points}`;
     }
 
-    loginBtn.addEventListener("click", () => {
-      signInWithPopup(auth, provider)
-        .then((result) => {
-          // Zalogowany
-        })
-        .catch((error) => {
-          alert("Błąd logowania: " + error.message);
-        });
-    });
-
-    logoutBtn.addEventListener("click", () => {
-      signOut(auth).then(() => {
-        loginSection.style.display = "block";
-        mainSection.style.display = "none";
-        if(countdownInterval) clearInterval(countdownInterval);
-      });
-    });
-
-    doneBtn.addEventListener("click", markAsDone);
-
-    closeModalBtn.addEventListener("click", () => {
+    function closeModal() {
       modal.style.display = "none";
-    });
+    }
 
-    onAuthStateChanged(auth, user => {
-      if(user) {
-        loginSection.style.display = "none";
-        mainSection.style.display = "block";
-        userInfo.innerText = `Zalogowany jako: ${user.email}`;
-        loadState(user.uid);
+    // Ranking top użytkowników w localStorage
+    // Przechowujemy jako JSON: {username: string, points: number}[]
+    function getTopUsers() {
+      const topJSON = localStorage.getItem("zmd_top_users");
+      return topJSON ? JSON.parse(topJSON) : [];
+    }
 
-        if(nextChallengeTime && nextChallengeTime > new Date().getTime()) {
-          doneBtn.disabled = true;
-          modal.style.display = "flex";
-          updateCountdown();
-          countdownInterval = setInterval(updateCountdown, 1000);
-          challengeText.innerText = "🔒 Wróć jutro po nowe wyzwanie!";
-        } else {
-          doneBtn.disabled = false;
-          modal.style.display = "none";
-          showRandomChallenge();
-        }
+    function saveTopUsers(topUsers) {
+      localStorage.setItem("zmd_top_users", JSON.stringify(topUsers));
+    }
+
+    function updateTopUsers(user, pts) {
+      if (!user) return;
+      let topUsers = getTopUsers();
+      const existing = topUsers.find(u => u.username === user);
+      if (existing) {
+        if (pts > existing.points) existing.points = pts;
       } else {
-        loginSection.style.display = "block";
-        mainSection.style.display = "none";
-        if(countdownInterval) clearInterval(countdownInterval);
+        topUsers.push({ username: user, points: pts });
       }
-    });
+      // Sort malejąco
+      topUsers.sort((a,b) => b.points - a.points);
+      // Trzymaj max 10
+      if (topUsers.length > 10) topUsers = topUsers.slice(0,10);
+      saveTopUsers(topUsers);
+      renderTopUsers();
+    }
+
+    function renderTopUsers() {
+      let topUsers = getTopUsers();
+      topUsersList.innerHTML = "";
+      if(topUsers.length === 0) {
+        topUsersList.innerHTML = "<li>Brak danych</li>";
+        return;
+      }
+      topUsers.forEach(u => {
+        let li = document.createElement("li");
+        li.textContent = `${u.username} — ${u.points} pkt`;
+        topUsersList.appendChild(li);
+      });
+    }
+
+    function initApp() {
+      username = localStorage.getItem("zmd_username");
+      points = parseInt(localStorage.getItem("zmd_points")) || 0;
+      nextChallengeTime = parseInt(localStorage.getItem("zmd_next_time")) || 0;
+
+      if (!username) {
+        login();
+        return;
+      }
+
+      usernameDisplay.innerText = username;
+      userPointsDisplay.innerText = points;
+      appContainer.style.display = "block";
+      profile.style.display = "block";
+      topList.style.display = "block";
+
+      // Jeśli jeszcze można zrobić wyzwanie
+      if (!nextChallengeTime || new Date().getTime() > nextChallengeTime) {
+        doneBtn.disabled = false;
+        showChallenge();
+        pointsDisplay.innerText = `Punkty: ${points}`;
+      } else {
+        doneBtn.disabled = true;
+        challengeText.innerText = "⌛ Poczekaj 24h na kolejne wyzwanie...";
+        modal.style.display = "flex";
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
+      }
+
+      renderTopUsers();
+    }
+
+    initApp();
+
   </script>
 </body>
 </html>
