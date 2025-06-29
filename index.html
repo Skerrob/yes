@@ -3,243 +3,178 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zrób mi dzień - profil, statystyki, ranking</title>
+  <title>Zrób mi dzień</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500&display=swap');
+
     body {
       font-family: 'Fredoka', sans-serif;
       background: linear-gradient(to top left, #ffecd2, #fcb69f);
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
+      align-items: center;
+      height: 100vh;
       margin: 0;
-      padding: 2rem;
     }
+
     .app-container {
       background-color: #fff;
       border-radius: 2rem;
-      padding: 2rem;
-      max-width: 480px;
-      width: 100%;
+      padding: 2em;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
-    #profile {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
+
+    .challenge {
+      font-size: 1.4em;
+      margin: 1.5em 0;
     }
-    #profile img {
-      border-radius: 50%;
-      width: 64px;
-      height: 64px;
-    }
-    #profile-info {
-      flex-grow: 1;
-    }
-    #profile-info h2 {
-      margin: 0;
-      font-size: 1.3rem;
-    }
-    #profile-info p {
-      margin: 0;
-      color: #555;
-      font-size: 0.9rem;
-    }
+
     button {
       padding: 0.9em 2em;
       border: none;
+      background-color: #fc6076;
+      color: white;
       border-radius: 2em;
       font-size: 1.1em;
       cursor: pointer;
       transition: background 0.3s;
     }
-    #loginBtn {
-      background-color: #4285F4;
-      color: white;
-      display: block;
-      margin: 0 auto;
+
+    button:hover {
+      background-color: #ff3366;
     }
-    #loginBtn:hover {
-      background-color: #357ae8;
+
+    .points {
+      margin-top: 1.5em;
+      font-weight: bold;
+      color: #555;
     }
-    #logoutBtn {
-      background-color: #d93025;
-      color: white;
-      margin-top: 1rem;
-      width: 100%;
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
     }
-    #logoutBtn:hover {
-      background-color: #a52714;
-    }
-    #addTaskBtn {
-      background-color: #34a853;
-      color: white;
-      width: 100%;
-      margin: 1rem 0;
-    }
-    #addTaskBtn:hover {
-      background-color: #2c8e46;
-    }
-    #taskCounter {
-      font-weight: 700;
-      font-size: 1.2rem;
+
+    .modal-content {
+      background: white;
+      padding: 2em;
+      border-radius: 1em;
       text-align: center;
-      margin-bottom: 1rem;
+      max-width: 300px;
+      width: 90%;
     }
-    #ranking {
-      margin-top: 2rem;
+
+    .modal h2 {
+      margin-bottom: 1em;
     }
-    #ranking h3 {
-      margin-bottom: 0.8rem;
-      text-align: center;
-    }
-    #ranking-list {
-      list-style: none;
-      padding: 0;
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 1rem;
-    }
-    #ranking-list li {
-      padding: 0.5rem 1rem;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      justify-content: space-between;
-    }
-    #ranking-list li:last-child {
-      border-bottom: none;
+
+    .close-btn {
+      background: #fc6076;
+      border: none;
+      color: white;
+      padding: 0.5em 1em;
+      border-radius: 1em;
+      margin-top: 1em;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-
-  <div class="app-container" id="app">
-
-    <!-- Sekcja logowania -->
-    <div id="loginSection">
-      <button id="loginBtn">Zaloguj przez Google</button>
-    </div>
-
-    <!-- Profil + zadania + ranking -->
-    <div id="profileSection" style="display:none;">
-      <div id="profile">
-        <img id="userPhoto" src="" alt="Avatar" />
-        <div id="profile-info">
-          <h2 id="userName"></h2>
-          <p id="userEmail"></p>
-        </div>
-      </div>
-
-      <div id="taskCounter">Wykonane zadania: 0</div>
-      <button id="addTaskBtn">Zrób mi dzień</button>
-      <button id="logoutBtn">Wyloguj się</button>
-
-      <div id="ranking">
-        <h3>Top wykonawców</h3>
-        <ul id="ranking-list"></ul>
-      </div>
-    </div>
-
+  <div class="app-container">
+    <h1>Zrób mi dzień 🎉</h1>
+    <p class="challenge" id="challenge">Ładowanie wyzwania...</p>
+    <button id="doneBtn" onclick="markAsDone()">Zrobione ✅</button>
+    <p class="points" id="points">Punkty: 0</p>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2>🎉 Gratulacje!</h2>
+      <p>Nowe wyzwanie będzie dostępne za:</p>
+      <p id="countdown"></p>
+      <button class="close-btn" onclick="closeModal()">Zamknij</button>
+    </div>
+  </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDY63HPKIKtTXBFcvZqEVBQgtW0627-Pqg",
-      authDomain: "zrob-mi-dzien.firebaseapp.com",
-      projectId: "zrob-mi-dzien",
-      storageBucket: "zrob-mi-dzien.firebasestorage.app",
-      messagingSenderId: "161518888152",
-      appId: "1:161518888152:web:c519898be81990cd3fa3ad",
-      measurementId: "G-CYB3WNG5LK"
-    };
+  <script>
+    const challenges = [
+      "Uśmiechnij się do obcej osoby 😄",
+      "Powiedz komuś coś miłego 💬",
+      "Wyjdź na 10 minut bez telefonu 📵",
+      "Narysuj coś głupiego ✏️",
+      "Zjedz coś, czego zwykle nie jesz 🍍",
+      "Przybij piątkę 3 osobom ✋",
+      "Wyślij śmiesznego mema komuś 🐸",
+      "Zamień się miejscem w domu z kimś na 5 minut 🛋️",
+      "Napisz wiadomość do siebie z przyszłości 📧",
+      "Zrób 7 pajacyków 🤸"
+    ];
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
+    const pointsDisplay = document.getElementById("points");
+    const challengeText = document.getElementById("challenge");
+    const modal = document.getElementById("modal");
+    const countdown = document.getElementById("countdown");
+    const doneBtn = document.getElementById("doneBtn");
 
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const loginSection = document.getElementById('loginSection');
-    const profileSection = document.getElementById('profileSection');
-    const userName = document.getElementById('userName');
-    const userEmail = document.getElementById('userEmail');
-    const userPhoto = document.getElementById('userPhoto');
-    const taskCounter = document.getElementById('taskCounter');
-    const addTaskBtn = document.getElementById('addTaskBtn');
-    const rankingList = document.getElementById('ranking-list');
+    const cooldown = 6 * 60 * 60 * 1000; // 6 godzin w ms
+    let points = parseInt(localStorage.getItem("zmd_points")) || 0;
+    let nextChallengeTime = localStorage.getItem("zmd_next_time");
+    let now = new Date().getTime();
 
-    let currentUser = null;
-    let userTasks = 0;
-
-    loginBtn.onclick = () => {
-      signInWithPopup(auth, provider).catch(console.error);
-    };
-
-    logoutBtn.onclick = () => {
-      signOut(auth);
-    };
-
-    addTaskBtn.onclick = async () => {
-      if (!currentUser) return;
-      userTasks++;
-      taskCounter.textContent = `Wykonane zadania: ${userTasks}`;
-      // Zapisz do Firestore
-      const userDoc = doc(db, "users", currentUser.uid);
-      await setDoc(userDoc, { tasks: userTasks, name: currentUser.displayName, email: currentUser.email, photoURL: currentUser.photoURL }, { merge: true });
-      await loadRanking();
-    };
-
-    async function loadUserData(user) {
-      currentUser = user;
-      userName.textContent = user.displayName;
-      userEmail.textContent = user.email;
-      userPhoto.src = user.photoURL || "https://www.gravatar.com/avatar/?d=mp";
-
-      // Pobierz zadania użytkownika z Firestore
-      const userDoc = doc(db, "users", user.uid);
-      const docSnap = await getDoc(userDoc);
-      if (docSnap.exists()) {
-        userTasks = docSnap.data().tasks || 0;
-      } else {
-        userTasks = 0;
-      }
-      taskCounter.textContent = `Wykonane zadania: ${userTasks}`;
+    function showChallenge() {
+      const challenge = challenges[Math.floor(Math.random() * challenges.length)];
+      challengeText.innerText = challenge;
     }
 
-    async function loadRanking() {
-      rankingList.innerHTML = "";
-      const q = query(collection(db, "users"), orderBy("tasks", "desc"), limit(10));
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const li = document.createElement("li");
-        li.textContent = `${data.name || "Anonim"}: ${data.tasks || 0} zadań`;
-        rankingList.appendChild(li);
-      });
+    function updateCountdown() {
+      let now = new Date().getTime();
+      let distance = nextChallengeTime - now;
+      if (distance <= 0) {
+        localStorage.removeItem("zmd_next_time");
+        location.reload();
+      } else {
+        let hours = Math.floor(distance / (1000 * 60 * 60));
+        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        countdown.innerText = `${hours}h ${minutes}m ${seconds}s`;
+      }
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        loginSection.style.display = "none";
-        profileSection.style.display = "block";
-        await loadUserData(user);
-        await loadRanking();
-      } else {
-        loginSection.style.display = "block";
-        profileSection.style.display = "none";
-        currentUser = null;
-        userTasks = 0;
-        rankingList.innerHTML = "";
-      }
-    });
+    function markAsDone() {
+      points++;
+      localStorage.setItem("zmd_points", points);
+      let nextTime = new Date().getTime() + cooldown; // cooldown 6h
+      localStorage.setItem("zmd_next_time", nextTime);
+      modal.style.display = "flex";
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+      doneBtn.disabled = true;
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    if (nextChallengeTime && now < parseInt(nextChallengeTime)) {
+      challengeText.innerText = "🔒 Wróć za kilka godzin po nowe wyzwanie!";
+      doneBtn.disabled = true;
+      modal.style.display = "flex";
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    } else {
+      showChallenge();
+    }
+
+    pointsDisplay.innerText = `Punkty: ${points}`;
   </script>
-
 </body>
 </html>
